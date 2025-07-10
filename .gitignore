@@ -1,0 +1,17 @@
+# Python 編譯檔
+__pycache__/
+*.py[cod]
+*.pyo
+
+# PyInstaller build 資料夾與產物
+build/
+dist/
+*.spec
+
+# IDE 設定檔（PyCharm, VSCode）
+.idea/
+.vscode/
+
+# 暫存檔案與日誌
+*.log
+*.tmp
