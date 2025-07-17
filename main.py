@@ -4,8 +4,10 @@ from tkinter import filedialog
 from tkinter import scrolledtext
 from Bio.Seq import Seq
 from Bio.Align import PairwiseAligner
-
+import traceback
 from Bio import SeqIO
+
+
 
 class RecordInfo:
     def __init__(self, record):
@@ -25,9 +27,9 @@ class App:
         self.mismatch_score = tk.StringVar()
         self.mismatch_score.set("-1.0")
         self.open_gap_score = tk.StringVar()
-        self.open_gap_score.set("-5.0")
+        self.open_gap_score.set("-0.5")
         self.extend_gap_score = tk.StringVar()
-        self.extend_gap_score.set("-0.5")
+        self.extend_gap_score.set("-0.1")
 
         # 建立兩個標籤，分別顯示不同按鈕選的檔案
 
@@ -48,17 +50,17 @@ class App:
         top_frame.columnconfigure(0, weight=1)
 
         # 第一個 Text
-        text_output1 = tk.Text(left_text_frame, height=11, width=90)  # 注意高度減半
-        scroll1 = tk.Scrollbar(left_text_frame, command=text_output1.yview)
-        text_output1.configure(yscrollcommand=scroll1.set)
-        text_output1.grid(row=0, column=0, padx=5, sticky="nsew")
+        self.text_output1 = tk.Text(left_text_frame, height=11, width=90)  # 注意高度減半
+        scroll1 = tk.Scrollbar(left_text_frame, command=self.text_output1.yview)
+        self.text_output1.configure(yscrollcommand=scroll1.set)
+        self.text_output1.grid(row=0, column=0, padx=5, sticky="nsew")
         scroll1.grid(row=0, column=1, sticky="ns")
 
         # 第二個 Text
-        text_output2 = tk.Text(left_text_frame, height=11, width=90)  # 注意高度減半
-        scroll2 = tk.Scrollbar(left_text_frame, command=text_output2.yview)
-        text_output2.configure(yscrollcommand=scroll2.set)
-        text_output2.grid(row=1, column=0, padx=5, sticky="nsew")
+        self.text_output2 = tk.Text(left_text_frame, height=11, width=90)  # 注意高度減半
+        scroll2 = tk.Scrollbar(left_text_frame, command=self.text_output2.yview)
+        self.text_output2.configure(yscrollcommand=scroll2.set)
+        self.text_output2.grid(row=1, column=0, padx=5, sticky="nsew")
         scroll2.grid(row=1, column=1, sticky="ns")
 
         # 讓上下平均拉伸
@@ -67,10 +69,10 @@ class App:
         left_text_frame.columnconfigure(0, weight=1)
 
         # ===== 右側單一 Text3（維持不動） =====
-        text_output3 = tk.Text(top_frame, height=22, width=100)
-        scroll3 = tk.Scrollbar(top_frame, command=text_output3.yview)
-        text_output3.configure(yscrollcommand=scroll3.set)
-        text_output3.grid(row=0, column=2, padx=5, sticky="nsew")
+        self.text_output3 = tk.Text(top_frame, height=22, width=100)
+        scroll3 = tk.Scrollbar(top_frame, command=self.text_output3.yview)
+        self.text_output3.configure(yscrollcommand=scroll3.set)
+        self.text_output3.grid(row=0, column=2, padx=5, sticky="nsew")
         scroll3.grid(row=0, column=3, sticky="ns")
 
         # ===== 底部 - 檔案按鈕、參數輸入區、比對按鈕 =====
@@ -78,22 +80,23 @@ class App:
         file_frame1 = tk.Frame(bottom_frame)
         file_frame1.grid(row=0, column=0, padx=10, pady=5)
 
-        file_label1 = tk.Label(file_frame1, text="檔案1尚未選取")
-        file_label1.pack(side=tk.LEFT)
-        file_btn1 = tk.Button(file_frame1, text="選擇檔案1", command=lambda: self.select_file(file_label1, text_output1))
+        self.file_label1 = tk.Label(file_frame1, text="檔案1尚未選取")
+        self.file_label1.pack(side=tk.LEFT)
+        file_btn1 = tk.Button(file_frame1, text="選擇檔案1", command=lambda: self.select_file(self.file_label1, self.text_output1))
         file_btn1.pack(side=tk.LEFT)
 
         file_frame2 = tk.Frame(bottom_frame)
         file_frame2.grid(row=1, column=0, padx=10, pady=5)
 
-        file_label2 = tk.Label(file_frame2, text="檔案2尚未選取")
-        file_label2.pack(side=tk.LEFT)
-        file_btn2 = tk.Button(file_frame2, text="選擇檔案2", command=lambda: self.select_file(file_label2, text_output2))
+        self.file_label2 = tk.Label(file_frame2, text="檔案2尚未選取")
+        self.file_label2.pack(side=tk.LEFT)
+        file_btn2 = tk.Button(file_frame2, text="選擇檔案2", command=lambda: self.select_file(self.file_label2, self.text_output2))
         file_btn2.pack(side=tk.LEFT)
 
         # 對齊參數欄位
         param_frame = tk.LabelFrame(bottom_frame, text="比對參數", padx=10, pady=10)
         param_frame.grid(row=2, column=0, columnspan=2, sticky="w")
+
 
         labels = ["match_score", "mismatch_score", "open_gap_score", "extend_gap_score"]
         vars_ = [self.match_score, self.mismatch_score, self.open_gap_score, self.extend_gap_score]
@@ -103,9 +106,11 @@ class App:
             tk.Entry(param_frame, textvariable=var, width=20).grid(row=i, column=1, sticky="w", pady=2)
 
         # 比對按鈕
-        self.compare_btn = tk.Button(bottom_frame, text="比對序列", command=lambda :self.start_alignment(self.records,text_output3,self.compare_btn))
+        self.compare_btn = tk.Button(bottom_frame, text="比對序列", command=lambda :self.start_alignment(self.records,self.text_output3,self.compare_btn))
         self.compare_btn.grid(row=4, column=1, sticky="e", pady=10)
 
+        self.compare_btn = tk.Button(bottom_frame, text="清除紀錄", command=lambda :self.sequence_clear())
+        self.compare_btn.grid(row=4, column=0, sticky="e", pady=10)
 
 
     def select_file(self,target_label,target_widget):
@@ -137,17 +142,18 @@ class App:
             target_widget.insert(tk.END, "請確認基因序列是否都已經輸入...\n")
             return
 
-        threading.Thread(target= lambda : self.threaded_alignment(seq_pair, target_widget, alignment_type)).start()
+        try:
+            threading.Thread(target= lambda : self.threaded_alignment(seq_pair, target_widget, alignment_type)).start()
+        except Exception as e:
+            target_widget.insert(tk.END, f"發生例外錯誤：{str(e)}\n")
+            target_widget.insert(tk.END, traceback.format_exc())
+            target_widget.insert(tk.END, "\n")
 
     def analyze_gene_similarity(self,gene_seq_str, target_widget, alignment_type="global"):
         gene1_seq = Seq(gene_seq_str[0].upper())
         gene2_seq = Seq(gene_seq_str[1].upper())
 
         aligner = PairwiseAligner()
-        # aligner.match_score = 1.0
-        # aligner.mismatch_score = -1.0
-        # aligner.open_gap_score = -5.0
-        # aligner.extend_gap_score = -0.5
 
         aligner.match_score = float(self.match_score.get())
         aligner.mismatch_score = float(self.mismatch_score.get())
@@ -168,9 +174,15 @@ class App:
         alignments = aligner.align(gene1_seq, gene2_seq)
 
         result += "\n--- 比對結果 ---"
-        if not alignments:
+        # if not alignments:
+        #     result += "沒有找到有效比對。"
+        #     return result
+
+        normalized_score = alignments.score / max(len(gene1_seq), len(gene2_seq))
+        if normalized_score < 0.1:
             result += "沒有找到有效比對。"
             return result
+
 
         best_alignment = alignments[0]
         result += f"最佳比對分數: {best_alignment.score:.2f}"
@@ -181,6 +193,9 @@ class App:
         aligned_seq2 = str(best_alignment[1])
 
         matches = 0
+
+
+
         aligned_length_without_gaps = 0
         for char1, char2 in zip(aligned_seq1, aligned_seq2):
             if char1 != '-' and char2 != '-':
@@ -188,7 +203,9 @@ class App:
                 if char1 == char2:
                     matches += 1
 
+
         similarity_percentage = (matches / aligned_length_without_gaps) * 100 if aligned_length_without_gaps > 0 else 0
+
 
         result += f"匹配的核苷酸數量: {matches}\n"
         result += f"比對後有效長度: {aligned_length_without_gaps}\n"
@@ -199,6 +216,15 @@ class App:
 
         return result
 
+    def sequence_clear(self):
+        self.records.clear()
+        self.text_output1.delete("1.0", tk.END)
+        self.text_output2.delete("1.0", tk.END)
+        self.text_output3.delete("1.0", tk.END)
+
+        # 重設 Label
+        self.file_label1.config(text="檔案1尚未選取")
+        self.file_label2.config(text="檔案2尚未選取")
 
     def threaded_alignment(self, seq_pair, target_widget, alignment_type):
         result = self.analyze_gene_similarity(seq_pair, alignment_type)
